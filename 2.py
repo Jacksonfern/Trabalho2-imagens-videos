@@ -16,7 +16,39 @@ def histograma_local(frame):
 
     return hist
 
+def diff_histograma_local(hf, hg):
+    diff = 0
+    for p in range(25):
+        dr = 0
+        dg = 0
+        db = 0
+        for i in range(255):
+            db += np.abs((hf[p][i][0]-hg[p][i][0]))
+            dg += np.abs((hf[p][i][1]-hg[p][i][1]))
+            dr += np.abs((hf[p][i][2]-hg[p][i][2]))
+        # print(db, dg, dr)
+        diff += (db+dg+dr)/3.0
+    return diff
+
 vd = cv2.VideoCapture('1.mp4')
-for i in range(100):
-    ret, frame = vd.read()
-hist_local = histograma_local(frame)
+w=60 #Tamanho da janela
+limiar = (1<<22)
+
+ret,frame = vd.read()
+hf = histograma_local(frame)
+q=0
+while True:
+    for i in range(2*w+1):
+        ret,frame = vd.read()
+        q+=1
+        if not ret:
+            break
+    if not ret:
+        break
+    ret,frame=vd.read()
+    q+=1
+    hg = histograma_local(frame)
+    diff = diff_histograma_local(hf, hg)
+    if diff>limiar:
+        print("Mudanca de cena no quadro %d"%q)
+    hf = hg
