@@ -2,12 +2,12 @@ import cv2
 import numpy as np
 
 def histograma_global(frame):
-    hist=np.zeros((3,256), dtype=int)
+    hist=np.zeros((256,3), dtype=int)
 
     for i in range(len(frame)):
         for j in range(len(frame[0])):
             for k in range(3):
-                hist[k][frame[i][j][k]]+=1
+                hist[frame[i][j][k]][k]+=1
 
     return hist
 
@@ -16,9 +16,9 @@ def diff(hf, hg):
     dg = 0
     db = 0
     for i in range(255):
-        db += np.abs((hf[0][i]-hg[0][i]))
-        dg += np.abs((hf[1][i]-hg[1][i]))
-        dr += np.abs((hf[2][i]-hg[2][i]))
+        db += np.abs((hf[i][0]-hg[i][0]))
+        dg += np.abs((hf[i][1]-hg[i][1]))
+        dr += np.abs((hf[i][2]-hg[i][2]))
     # print(db, dg, dr)
     return (db+dg+dr)/3.0
 
@@ -28,20 +28,21 @@ w=60 #Tamanho da janela
 limiar=(1<<20)
 
 ret,frame=vd.read()
-hist0 = histograma_global(frame)
-q=1
+hf = histograma_global(frame)
+q=0
 while True:
     for i in range(2*w+1):
         ret,frame=vd.read()
+        q+=1
         if not ret:
             break
     if not ret:
         break
-    q+=2*w+1
     
     ret,frame=vd.read()
-    hist1 = histograma_global(frame)
-    d = diff(hist0, hist1)
+    q+=1
+    hg = histograma_global(frame)
+    d = diff(hf, hg)
     if d>limiar:
         print("Cena detectada no quadro %d" %q)
-    hist0 = np.array(hist1)
+    hf = hg
